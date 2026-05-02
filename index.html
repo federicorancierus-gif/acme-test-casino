@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0A0E18" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Acme Casino — test integration</title>
+    <style>
+      :root {
+        --bg-0: #06080F;
+        --bg-1: #0A0E18;
+        --bg-2: #11151F;
+        --bg-3: #1B2230;
+        --line: #1F2738;
+        --line-strong: #2A334A;
+        --fg-1: #E8EBF2;
+        --fg-2: #B0B8CB;
+        --fg-3: #6A7388;
+        --fg-4: #4A5266;
+        --gold: #C99745;
+        --gold-bright: #F1CB6B;
+        --green: #5DBF7E;
+        --cyan: #5DD3E8;
+        --red: #E55A5A;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background: var(--bg-0);
+        color: var(--fg-1);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+      .shell {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 24px;
+        background: rgba(10,14,24,0.92);
+        border-bottom: 1px solid var(--line);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        backdrop-filter: blur(8px);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .brand-mark {
+        width: 28px;
+        height: 28px;
+        border-radius: 4px;
+        background: linear-gradient(135deg, #d63a3a 0%, #821414 100%);
+        display: grid;
+        place-items: center;
+        font-family: "Courier New", monospace;
+        font-weight: 800;
+        font-size: 16px;
+        color: #fff;
+        letter-spacing: -1px;
+      }
+      .brand-name {
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        color: var(--fg-1);
+      }
+      .brand-sub {
+        font-size: 10px;
+        color: var(--fg-3);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-top: 2px;
+      }
+      .wallet {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        background: rgba(11,14,22,0.7);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        font-family: "Courier New", monospace;
+        font-size: 13px;
+        color: var(--fg-1);
+      }
+      .wallet .symbol { color: var(--gold-bright); font-weight: 700; }
+      .wallet .demo {
+        font-size: 10px;
+        color: var(--fg-3);
+        margin-left: 6px;
+        letter-spacing: 0.1em;
+      }
+      main {
+        flex: 1;
+        max-width: 1200px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 28px 24px;
+      }
+      .banner {
+        background: linear-gradient(135deg, rgba(214,58,58,0.08) 0%, rgba(11,14,22,0.5) 60%);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 20px 24px;
+        margin-bottom: 28px;
+      }
+      .banner h1 {
+        margin: 0 0 6px 0;
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+      }
+      .banner p {
+        margin: 0;
+        color: var(--fg-2);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+      .banner code {
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+        color: var(--cyan);
+        background: rgba(0,229,255,0.06);
+        padding: 1px 6px;
+        border-radius: 3px;
+        border: 1px solid rgba(0,229,255,0.2);
+      }
+      .section-label {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--fg-3);
+        margin: 0 0 14px 0;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 14px;
+      }
+      .tile {
+        background: var(--bg-2);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 18px;
+        cursor: pointer;
+        transition: border-color 200ms, transform 200ms, background 200ms;
+        text-align: left;
+        font: inherit;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        position: relative;
+        overflow: hidden;
+      }
+      .tile:hover {
+        border-color: var(--gold-bright);
+        transform: translateY(-2px);
+        background: var(--bg-3);
+      }
+      .tile-badge {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        padding: 2px 8px;
+        background: rgba(241,203,107,0.10);
+        border: 1px solid rgba(241,203,107,0.35);
+        color: var(--gold-bright);
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.15em;
+        border-radius: 3px;
+        text-transform: uppercase;
+      }
+      .tile-name {
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--fg-1);
+        margin-top: 18px;
+      }
+      .tile-tagline {
+        font-size: 12px;
+        color: var(--fg-2);
+        line-height: 1.5;
+      }
+      .tile-meta {
+        font-family: "Courier New", monospace;
+        font-size: 11px;
+        color: var(--fg-3);
+        letter-spacing: 0.05em;
+        margin-top: auto;
+        padding-top: 8px;
+        border-top: 1px solid var(--line);
+      }
+      .tile-meta strong { color: var(--green); font-weight: 600; }
+      .play-cta {
+        display: inline-block;
+        padding: 8px 14px;
+        background: var(--gold-bright);
+        color: #0A0E18;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        font-size: 11px;
+        border: 0;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 6px;
+        align-self: flex-start;
+      }
+
+      /* iframe overlay — opens when a tile is clicked */
+      .modal {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        background: rgba(0,0,0,0.85);
+        display: none;
+        flex-direction: column;
+        backdrop-filter: blur(4px);
+      }
+      .modal.open { display: flex; }
+      .modal-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 18px;
+        background: rgba(11,14,22,0.95);
+        border-bottom: 1px solid var(--line);
+      }
+      .modal-bar .now-playing {
+        font-size: 13px;
+        color: var(--fg-2);
+      }
+      .modal-bar .now-playing strong {
+        color: var(--gold-bright);
+        margin-left: 4px;
+      }
+      .modal-bar button {
+        padding: 7px 14px;
+        background: transparent;
+        border: 1px solid var(--line-strong);
+        color: var(--fg-1);
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .modal-bar button:hover { background: var(--bg-3); }
+      .modal-iframe-wrap {
+        flex: 1;
+        min-height: 0;
+        background: var(--bg-0);
+      }
+      .modal-iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        display: block;
+      }
+
+      footer {
+        padding: 16px 24px;
+        border-top: 1px solid var(--line);
+        background: var(--bg-1);
+        font-size: 11px;
+        color: var(--fg-3);
+        text-align: center;
+        font-family: "Courier New", monospace;
+      }
+      footer code { color: var(--cyan); }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header>
+        <div class="brand">
+          <div class="brand-mark">A</div>
+          <div>
+            <div class="brand-name">Acme Casino</div>
+            <div class="brand-sub">Test integration</div>
+          </div>
+        </div>
+        <div class="wallet">
+          <span class="symbol">USDT</span>
+          <span>1,000.00</span>
+          <span class="demo">DEMO</span>
+        </div>
+      </header>
+
+      <main>
+        <div class="banner">
+          <h1>Vault Breaker Studios — test embed</h1>
+          <p>
+            This page simulates how a real crypto casino operator would embed Vault Breaker games.
+            Each tile loads <code>vaultbreaker.dev/play/&lt;slug&gt;</code> in an iframe with
+            <code>?operator=demo</code>. The audit log on our admin records every round under the
+            <code>demo</code> operator. Real operators replace <code>demo</code> with their own
+            operator id and add their domain to our CSP allowlist.
+          </p>
+        </div>
+
+        <div class="section-label">Originals · Vault Breaker Studios</div>
+        <div class="grid">
+          <button class="tile" data-slug="vault-breaker" data-name="Vault Breaker">
+            <span class="tile-badge">Crash</span>
+            <span class="tile-name">Vault Breaker</span>
+            <span class="tile-tagline">
+              Five locks. Thirty seconds. One exit. Cash out before the vault seals.
+            </span>
+            <span class="tile-meta">
+              99% RTP · 30s rounds · <strong>Provably fair</strong>
+            </span>
+            <span class="play-cta">Play demo</span>
+          </button>
+
+          <button class="tile" data-slug="pressure-plate" data-name="Pressure Plate">
+            <span class="tile-badge">Mines</span>
+            <span class="tile-name">Pressure Plate</span>
+            <span class="tile-tagline">
+              A 5×5 vault floor. Step on safe plates, dodge the silent alarm.
+            </span>
+            <span class="tile-meta">
+              99% RTP · 1–24 mines · <strong>Provably fair</strong>
+            </span>
+            <span class="play-cta">Play demo</span>
+          </button>
+
+          <button class="tile" data-slug="cipher-crack" data-name="Cipher Crack">
+            <span class="tile-badge">Mastermind</span>
+            <span class="tile-name">Cipher Crack</span>
+            <span class="tile-tagline">
+              A 4-digit code. Four guesses. Thirty seconds. Crack it for up to 20×.
+            </span>
+            <span class="tile-meta">
+              99% RTP · 30s rounds · <strong>Provably fair</strong>
+            </span>
+            <span class="play-cta">Play demo</span>
+          </button>
+        </div>
+      </main>
+
+      <footer>
+        Acme Casino · test integration · embeds <code>https://vaultbreaker.dev/play/*</code>
+      </footer>
+    </div>
+
+    <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="now-playing">
+      <div class="modal-bar">
+        <button type="button" id="back-btn" aria-label="Back to lobby">← Back to lobby</button>
+        <div class="now-playing">Now playing:<strong id="now-playing"></strong></div>
+        <span style="width: 110px"><!-- spacer for symmetric layout --></span>
+      </div>
+      <div class="modal-iframe-wrap">
+        <iframe
+          id="game-iframe"
+          class="modal-iframe"
+          allow="autoplay; clipboard-read"
+          title="Vault Breaker Studios game embed"
+        ></iframe>
+      </div>
+    </div>
+
+    <script>
+      // Fictional operator id. The real Vault Breaker server is in demo mode
+      // for this slug — every test round resolves against the built-in demo
+      // operator and shows up under operator="demo" on the admin audit log.
+      const OPERATOR_ID = "demo";
+
+      const VAULT_BASE = "https://vaultbreaker.dev";
+
+      const modal = document.getElementById("modal");
+      const iframe = document.getElementById("game-iframe");
+      const nowPlaying = document.getElementById("now-playing");
+
+      function buildSrc(slug) {
+        // Vault Breaker (the crash game) lives at /play; the others have
+        // their own slug subpath. Same convention as our /casino route.
+        const path = slug === "vault-breaker" ? "/play" : "/play/" + slug;
+        const params = new URLSearchParams({
+          operator: OPERATOR_ID,
+          currency: "USDT",
+        });
+        return VAULT_BASE + path + "?" + params.toString();
+      }
+
+      function openGame(slug, name) {
+        nowPlaying.textContent = " " + name;
+        iframe.src = buildSrc(slug);
+        modal.classList.add("open");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeGame() {
+        modal.classList.remove("open");
+        // Drop the iframe src so the game stops running in the background.
+        iframe.src = "about:blank";
+        document.body.style.overflow = "";
+      }
+
+      document.querySelectorAll(".tile").forEach((tile) => {
+        tile.addEventListener("click", () => {
+          const slug = tile.getAttribute("data-slug");
+          const name = tile.getAttribute("data-name");
+          openGame(slug, name);
+        });
+      });
+
+      document.getElementById("back-btn").addEventListener("click", closeGame);
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && modal.classList.contains("open")) closeGame();
+      });
+    </script>
+  </body>
+</html>
