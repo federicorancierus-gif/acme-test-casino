@@ -1,7 +1,8 @@
 name: Quality Agent
 # Agente de quality-check de Syntra: revisa cada PR con Claude contra el CLAUDE.md
-# del repo (bugs, seguridad, convenciones). Inerte hasta que exista el secret
-# ANTHROPIC_API_KEY (de repo o de organización). No bloquea: solo comenta.
+# del repo (bugs, seguridad, convenciones). Usa tu plan Max via OAuth (NO API key,
+# sin costo por uso). Inerte hasta que exista el secret CLAUDE_CODE_OAUTH_TOKEN
+# (genéralo con `claude setup-token`). No bloquea: solo comenta.
 on:
   pull_request:
     types: [opened, synchronize, reopened]
@@ -23,14 +24,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Detect API key
+      - name: Detect subscription token
         id: gate
-        run: echo "ok=${{ secrets.ANTHROPIC_API_KEY != '' }}" >> "$GITHUB_OUTPUT"
+        run: echo "ok=${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}" >> "$GITHUB_OUTPUT"
       - name: Claude quality review
         if: steps.gate.outputs.ok == 'true'
         uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           prompt: |
             Eres el agente de quality-check de Syntra. Revisa SOLO el diff de este PR.
@@ -46,4 +47,4 @@ jobs:
             Si todo esta bien, dilo en una linea. No reescribas el PR; comenta hallazgos accionables.
       - name: Note if disabled
         if: steps.gate.outputs.ok != 'true'
-        run: echo "::notice::Quality Agent inactivo — agrega el secret ANTHROPIC_API_KEY (repo u organizacion) para activarlo."
+        run: echo "::notice::Quality Agent inactivo — corre 'claude setup-token' y agrega el secret CLAUDE_CODE_OAUTH_TOKEN (repo u organizacion) para activarlo con tu plan Max."
