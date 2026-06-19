@@ -33,6 +33,8 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          # track_progress => posts/updates a visible PR comment with the review
+          track_progress: "true"
           prompt: |
             Eres el agente de quality-check de Syntra. Revisa SOLO el diff de este PR.
             Lee el CLAUDE.md del repo (global y de proyecto) y evalua contra esas convenciones.
