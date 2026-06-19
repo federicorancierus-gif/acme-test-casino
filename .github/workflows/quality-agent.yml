@@ -1,0 +1,52 @@
+name: Quality Agent
+# Agente de quality-check de Syntra: revisa cada PR con Claude contra el CLAUDE.md
+# del repo (bugs, seguridad, convenciones). Usa tu plan Max via OAuth (NO API key,
+# sin costo por uso). Inerte hasta que exista el secret CLAUDE_CODE_OAUTH_TOKEN
+# (genéralo con `claude setup-token`). No bloquea: solo comenta.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: quality-agent-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    name: Claude quality review
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Detect subscription token
+        id: gate
+        run: echo "ok=${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}" >> "$GITHUB_OUTPUT"
+      - name: Claude quality review
+        if: steps.gate.outputs.ok == 'true'
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # track_progress => posts/updates a visible PR comment with the review
+          track_progress: "true"
+          prompt: |
+            Eres el agente de quality-check de Syntra. Revisa SOLO el diff de este PR.
+            Lee el CLAUDE.md del repo (global y de proyecto) y evalua contra esas convenciones.
+            Reporta, conciso y de alto valor (omite lo trivial), con severidad (alta/media/baja):
+            - Bugs de correctitud y casos borde no manejados.
+            - Seguridad: autorizacion/tenant (findFirst con la clave de tenant, fail closed),
+              inyeccion (SQL/comandos/XSS), secretos, validacion de entrada y de salida de LLM,
+              manejo de dinero (nunca floats; centavos o Decimal segun el proyecto).
+            - Estilo: logica fuera de componentes/rutas, errores tipados {ok,...} vs throws
+              inconsistentes, sin any sin justificar, sin magic numbers, comentarios que explican
+              el PORQUE.
+            Si todo esta bien, dilo en una linea. No reescribas el PR; comenta hallazgos accionables.
+      - name: Note if disabled
+        if: steps.gate.outputs.ok != 'true'
+        run: echo "::notice::Quality Agent inactivo — corre 'claude setup-token' y agrega el secret CLAUDE_CODE_OAUTH_TOKEN (repo u organizacion) para activarlo con tu plan Max."

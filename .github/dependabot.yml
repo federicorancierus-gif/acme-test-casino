@@ -1,0 +1,9 @@
+version: 2
+# No application package ecosystem exists in this repo (no npm/cargo/pip
+# manifest -- the site is a single static index.html). The only thing with
+# pinned versions to keep current is the GitHub Actions used by CI.
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly

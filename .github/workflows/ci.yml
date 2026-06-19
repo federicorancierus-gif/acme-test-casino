@@ -1,0 +1,58 @@
+name: CI
+
+# Minimal CI for a purely-static single-file site (index.html with inline CSS/JS).
+# There is no package manager, build step, test runner, or dependency manifest
+# in this repo (README: "Site is purely static -- no build step required"), so the
+# usual install -> lint -> typecheck -> test -> build gates do not apply here and
+# are intentionally omitted rather than invented.
+#
+# What remains genuinely meaningful for committed source is security scanning:
+#   - gitleaks  : catch committed secrets (the page wires up operator ids / URLs)
+#   - semgrep   : p/secrets + p/owasp-top-ten over HTML/inline JS
+#
+# These gates are kept non-blocking (continue-on-error) on first adoption so the
+# pipeline lands green; harden by removing continue-on-error once it passes clean.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  secret-scan:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    continue-on-error: true # first adoption: non-blocking until it passes clean
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so gitleaks can scan all commits
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Personal account: no GITLEAKS_LICENSE required.
+
+  sast:
+    name: SAST (semgrep)
+    runs-on: ubuntu-latest
+    continue-on-error: true # first adoption: non-blocking until it passes clean
+    container:
+      image: semgrep/semgrep
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run semgrep
+        run: semgrep ci
+        env:
+          SEMGREP_RULES: >-
+            p/owasp-top-ten
+            p/secrets
